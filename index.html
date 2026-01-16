@@ -73,6 +73,34 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+        // 登入
+        window.login = () => signInWithPopup(auth, provider);
+        // 登出
+        window.logout = () => signOut(auth);
+        
+        // 監控登入狀態
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            const userInfo = document.getElementById('userInfo');
+            const msgInput = document.getElementById('msgInput');
+            
+            if (user) {
+                // 登入成功
+                loginBtn.style.display = "none";
+                userInfo.style.display = "flex";
+                document.getElementById('userName').innerText = user.displayName;
+                document.getElementById('userPic').src = user.photoURL;
+                msgInput.disabled = false; // 允許輸入
+            } else {
+                // 未登入
+                loginBtn.style.display = "block";
+                userInfo.style.display = "none";
+                msgInput.disabled = true; // 禁止輸入
+                msgInput.placeholder = "請先登入後再留言...";
+            }
+        });
+        
+        
         // 發送
         window.sendData = async function() {
             const input = document.getElementById('msgInput');
