@@ -36,6 +36,14 @@
 
     <div class="box">
         <h2>✨ 雲端管理留言板</h2>
+    <div id="authArea" style="margin-bottom: 20px;">
+        <button id="loginBtn" onclick="login()">使用 Google 登入</button>
+        <div id="userInfo" style="display: none; align-items: center; justify-content: center; gap: 10px;">
+            <img id="userPic" src="" style="width: 30px; border-radius: 50%;">
+            <span id="userName"></span>
+            <button onclick="logout()" style="width: auto; padding: 2px 8px; background: rgba(255,255,255,0.2);">登出</button>
+        </div>
+    </div>    
         <input type="text" id="msgInput" placeholder="輸入訊息...">
         <button onclick="sendData()">發送訊息</button>
         <p id="status"></p>
@@ -47,7 +55,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        
         // *** 請務必在此填入你自己的 Firebase Config ***
         const firebaseConfig = {
             apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
@@ -58,10 +68,11 @@
             appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
         };
 
-
+        
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
         // 發送
         window.sendData = async function() {
             const input = document.getElementById('msgInput');
@@ -71,7 +82,27 @@
                 input.value = "";
             } catch (e) { alert("發送失敗"); }
         };
-
+        // 把這段貼在原本的 window.sendData 附近
+        window.login = () => signInWithPopup(auth, provider);
+        window.logout = () => signOut(auth);
+        
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('loginBtn');
+            const userInfo = document.getElementById('userInfo');
+            const msgInput = document.getElementById('msgInput');
+            if (user) {
+                loginBtn.style.display = "none";
+                userInfo.style.display = "flex";
+                document.getElementById('userName').innerText = user.displayName;
+                document.getElementById('userPic').src = user.photoURL;
+                msgInput.disabled = false;
+            } else {
+                loginBtn.style.display = "block";
+                userInfo.style.display = "none";
+                msgInput.disabled = true;
+                msgInput.placeholder = "請先登入後再留言...";
+            }
+        });
         // 刪除
         window.deleteData = async function(id) {
             if (confirm("確定要刪除嗎？")) {
@@ -106,7 +137,7 @@
                 "color": { "value": "#ffffff" },
                 "shape": { "type": "circle" },
                 "opacity": { 
-                    "value": 0.3, // 降低透明度，讓它隱約閃爍，不刺眼
+                    "value": 0.4, // 降低透明度，讓它隱約閃爍，不刺眼
                     "random": true 
                 },
                 "size": { 
@@ -117,7 +148,7 @@
                     "enable": true, 
                     "distance": 130, 
                     "color": "#ffffff", 
-                    "opacity": 0.2, // 連線變淡一點，看起來更像高級的神經網路
+                    "opacity": 0.3, // 連線變淡一點，看起來更像高級的神經網路
                     "width": 1 
                 },
                 "move": { "enable": true, "speed": 1.5 } // 減慢速度，讓它像緩緩流動的星空
