@@ -2,18 +2,15 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>2026 粒子留言板</title>
+    <title>2026 終極留言板</title>
     <style>
-        /* 1. 背景動畫的容器設定 */
         #particles-js {
             position: fixed;
             width: 100%;
             height: 100%;
-            background-color: #0d1117; /* 深色背景 */
-            top: 0; left: 0; z-index: -1; /* 確保在最底層 */
+            background-color: #0d1117;
+            top: 0; left: 0; z-index: -1;
         }
-
-        /* 2. 你的留言板樣式 (延續之前的玻璃擬態) */
         body { margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .box {
             background: rgba(255, 255, 255, 0.1);
@@ -24,10 +21,13 @@
             width: 350px;
             color: white;
             text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
-        button { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #00d4ff; color: white; font-weight: bold; cursor: pointer; }
-        #msgList { text-align: left; margin-top: 20px; max-height: 200px; overflow-y: auto; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #00d4ff; color: white; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        #msgList { text-align: left; margin-top: 20px; max-height: 250px; overflow-y: auto; }
+        .msg-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px 0; }
+        .del-btn { width: auto; padding: 2px 8px; background: rgba(255, 71, 71, 0.6); font-size: 12px; margin: 0; }
     </style>
 </head>
 <body>
@@ -35,9 +35,9 @@
     <div id="particles-js"></div>
 
     <div class="box">
-        <h2>✨ 粒子流光留言板</h2>
+        <h2>✨ 雲端管理留言板</h2>
         <input type="text" id="msgInput" placeholder="輸入訊息...">
-        <button onclick="sendData()">發送到雲端</button>
+        <button onclick="sendData()">發送訊息</button>
         <p id="status"></p>
         <div id="msgList"></div>
     </div>
@@ -46,12 +46,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        
-        // *** 這裡請填入你昨天的 firebaseConfig ***
+        // *** 請務必在此填入你自己的 Firebase Config ***
         const firebaseConfig = {
             apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
             authDomain: "my-2026-db.firebaseapp.com",
@@ -61,77 +58,61 @@
             appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
         };
 
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 發送資料
+        // 發送
         window.sendData = async function() {
-            const text = document.getElementById('msgInput').value;
-            if (!text) return;
-            await addDoc(collection(db, "messages"), { content: text, time: new Date() });
-            document.getElementById('msgInput').value = "";
+            const input = document.getElementById('msgInput');
+            if (!input.value) return;
+            try {
+                await addDoc(collection(db, "messages"), { content: input.value, time: new Date() });
+                input.value = "";
+            } catch (e) { alert("發送失敗"); }
         };
 
-        // 修改後的讀取功能：加入刪除按鈕與 ID 抓取
+        // 刪除
+        window.deleteData = async function(id) {
+            if (confirm("確定要刪除嗎？")) {
+                try {
+                    await deleteDoc(doc(db, "messages", id));
+                } catch (e) { alert("刪除失敗"); }
+            }
+        };
+
+        // 讀取
         const q = query(collection(db, "messages"), orderBy("time", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('msgList');
             list.innerHTML = "";
             snapshot.forEach(snap => {
                 const data = snap.data();
-                const id = snap.id; // 這是這則留言的身分證 ID
-                
                 const item = document.createElement('div');
-                item.style.cssText = "display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 8px 0;";
-                
+                item.className = "msg-item";
                 item.innerHTML = `
                     <span>${data.content}</span>
-                    <button onclick="deleteData('${id}')" style="width: auto; padding: 2px 8px; background: rgba(255,0,0,0.5); font-size: 12px;">刪除</button>
+                    <button class="del-btn" onclick="deleteData('${snap.id}')">刪除</button>
                 `;
                 list.appendChild(item);
             });
         });
-        
-        // 6. 新增刪除動作
-        window.deleteData = async function(id) {
-            if (confirm("確定要刪除這則留言嗎？")) {
-                try {
-                    await deleteDoc(doc(db, "messages", id));
-                    alert("已成功刪除！");
-                } catch (e) {
-                    alert("刪除失敗，請檢查權限。");
-                }
-            }
-        };
 
-        // 啟動背景粒子動畫 (這段通常是從 CodePen 的 JS 區塊搬過來的)
-        // 啟動背景粒子動畫 (開啟滑鼠互動功能)
+        // 動畫啟動
         particlesJS("particles-js", {
             "particles": {
                 "number": { "value": 80 },
                 "color": { "value": "#ffffff" },
-                "shape": { "type": "circle" },
-                "opacity": { "value": 0.5 },
-                "size": { "value": 3 },
-                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
-                "move": { "enable": true, "speed": 4 }
+                "line_linked": { "enable": true, "color": "#ffffff", "opacity": 0.4 },
+                "move": { "enable": true, "speed": 3 }
             },
             "interactivity": {
-                "detect_on": "canvas",
                 "events": {
-                    "onhover": { "enable": true, "mode": "grab" }, // 滑鼠靠近時會「抓取」連線
-                    "onclick": { "enable": true, "mode": "push" }, // 點擊時會「噴出」更多粒子
-                    "resize": true
-                },
-                "modes": {
-                    "grab": { "distance": 200, "line_linked": { "opacity": 1 } },
-                    "push": { "particles_nb": 4 }
+                    "onhover": { "enable": true, "mode": "grab" },
+                    "onclick": { "enable": true, "mode": "push" }
                 }
-            },
-            "retina_detect": true
+            }
         });
-
-        
     </script>
 </body>
 </html>
