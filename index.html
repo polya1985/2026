@@ -47,7 +47,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        
         // *** 這裡請填入你昨天的 firebaseConfig ***
         const firebaseConfig = {
             apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
@@ -69,17 +72,37 @@
             document.getElementById('msgInput').value = "";
         };
 
-        // 讀取資料
+        // 修改後的讀取功能：加入刪除按鈕與 ID 抓取
         const q = query(collection(db, "messages"), orderBy("time", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('msgList');
             list.innerHTML = "";
-            snapshot.forEach(doc => {
+            snapshot.forEach(snap => {
+                const data = snap.data();
+                const id = snap.id; // 這是這則留言的身分證 ID
+                
                 const item = document.createElement('div');
-                item.innerHTML = `<p style="border-bottom: 1px solid rgba(255,255,255,0.2); padding: 5px;">${doc.data().content}</p>`;
+                item.style.cssText = "display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 8px 0;";
+                
+                item.innerHTML = `
+                    <span>${data.content}</span>
+                    <button onclick="deleteData('${id}')" style="width: auto; padding: 2px 8px; background: rgba(255,0,0,0.5); font-size: 12px;">刪除</button>
+                `;
                 list.appendChild(item);
             });
         });
+        
+        // 6. 新增刪除動作
+        window.deleteData = async function(id) {
+            if (confirm("確定要刪除這則留言嗎？")) {
+                try {
+                    await deleteDoc(doc(db, "messages", id));
+                    alert("已成功刪除！");
+                } catch (e) {
+                    alert("刪除失敗，請檢查權限。");
+                }
+            }
+        };
 
         // 啟動背景粒子動畫 (這段通常是從 CodePen 的 JS 區塊搬過來的)
         // 啟動背景粒子動畫 (開啟滑鼠互動功能)
