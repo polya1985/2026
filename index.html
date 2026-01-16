@@ -11,12 +11,29 @@
     </style>
 </head>
 <body>
-
+    <style>
+        /* 這裡稍微美化一下按鈕 */
+        button {
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            border: none;
+            padding: 12px 24px;
+            color: white;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            transition: 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+    </style>
+    
     <div class="box">
-        <h2>留言板</h2>
-        <input type="text" id="msgInput" placeholder="想說什麼？">
-        <button onclick="sendData()">傳送到雲端</button>
-        <p id="status"></p>
+        <h2>🚀 2026 雲端留言板</h2>
+        <input type="text" id="msgInput" placeholder="輸入想保存的訊息...">
+        <button onclick="sendData()">點我傳送</button>
+        <p id="status" style="color: #666; font-size: 14px;"></p>
     </div>
 
     <script type="module">
