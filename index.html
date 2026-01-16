@@ -99,12 +99,28 @@
         });
 
         // 動畫啟動
+        // 啟動背景粒子動畫 (精細科技版)
         particlesJS("particles-js", {
             "particles": {
-                "number": { "value": 80 },
+                "number": { "value": 100 }, // 增加粒子數量，讓畫面更豐富
                 "color": { "value": "#ffffff" },
-                "line_linked": { "enable": true, "color": "#ffffff", "opacity": 0.4 },
-                "move": { "enable": true, "speed": 3 }
+                "shape": { "type": "circle" },
+                "opacity": { 
+                    "value": 0.3, // 降低透明度，讓它隱約閃爍，不刺眼
+                    "random": true 
+                },
+                "size": { 
+                    "value": 1.5, // 縮小圓圈直徑，從 3 改成 1.5，變得很精緻
+                    "random": true 
+                },
+                "line_linked": { 
+                    "enable": true, 
+                    "distance": 130, 
+                    "color": "#ffffff", 
+                    "opacity": 0.2, // 連線變淡一點，看起來更像高級的神經網路
+                    "width": 1 
+                },
+                "move": { "enable": true, "speed": 1.5 } // 減慢速度，讓它像緩緩流動的星空
             },
             "interactivity": {
                 "events": {
