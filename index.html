@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>2026 終極留言板</title>
+    <title>2026 科技感全功能留言板</title>
     <style>
+        /* 背景容器 */
         #particles-js {
             position: fixed;
             width: 100%;
@@ -11,23 +12,33 @@
             background-color: #0d1117;
             top: 0; left: 0; z-index: -1;
         }
-        body { margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        /* 主視窗樣式 */
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .box {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(15px);
             padding: 30px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            width: 350px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 380px;
             color: white;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #00d4ff; color: white; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        #msgList { text-align: left; margin-top: 20px; max-height: 250px; overflow-y: auto; }
-        .msg-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 8px 0; }
-        .del-btn { width: auto; padding: 2px 8px; background: rgba(255, 71, 71, 0.6); font-size: 12px; margin: 0; }
+        /* 使用者資訊區 */
+        #userInfo { display: none; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; }
+        #userPic { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #00d4ff; }
+        /* 輸入框與按鈕 */
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: rgba(255,255,255,0.15); color: white; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(45deg, #007bff, #00d4ff); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4); }
+        button:disabled { background: #444; cursor: not-allowed; }
+        /* 留言列表 */
+        #msgList { text-align: left; margin-top: 25px; max-height: 250px; overflow-y: auto; }
+        .msg-item { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 0; }
+        .msg-content { flex-grow: 1; padding-right: 10px; font-size: 15px; }
+        .del-btn { width: auto; padding: 4px 10px; background: rgba(255, 71, 71, 0.4); font-size: 11px; margin-top: 2px; }
+        .del-btn:hover { background: rgba(255, 71, 71, 0.8); }
     </style>
 </head>
 <body>
@@ -35,18 +46,20 @@
     <div id="particles-js"></div>
 
     <div class="box">
-        <h2>✨ 雲端管理留言板</h2>
-    <div id="authArea" style="margin-bottom: 20px;">
-        <button id="loginBtn" onclick="login()">使用 Google 登入</button>
-        <div id="userInfo" style="display: none; align-items: center; justify-content: center; gap: 10px;">
-            <img id="userPic" src="" style="width: 30px; border-radius: 50%;">
-            <span id="userName"></span>
-            <button onclick="logout()" style="width: auto; padding: 2px 8px; background: rgba(255,255,255,0.2);">登出</button>
+        <h2>🚀 2026 科技留言板</h2>
+
+        <div id="authArea">
+            <button id="loginBtn" onclick="login()">使用 Google 帳號登入</button>
+            <div id="userInfo">
+                <img id="userPic" src="">
+                <span id="userName"></span>
+                <button onclick="logout()" style="width: auto; padding: 4px 12px; font-size: 12px; background: #555;">登出</button>
+            </div>
         </div>
-    </div>    
-        <input type="text" id="msgInput" placeholder="輸入訊息...">
-        <button onclick="sendData()">發送訊息</button>
-        <p id="status"></p>
+
+        <input type="text" id="msgInput" placeholder="請先登入..." disabled>
+        <button id="sendBtn" onclick="sendData()" disabled>發送訊息</button>
+
         <div id="msgList"></div>
     </div>
 
@@ -57,8 +70,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        
-        // *** 請務必在此填入你自己的 Firebase Config ***
+        // 1. Firebase 配置 (請替換成你的)
         const firebaseConfig = {
             apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
             authDomain: "my-2026-db.firebaseapp.com",
@@ -68,79 +80,73 @@
             appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
         };
 
-        
+
+        // 2. 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
-        // 登入
-        window.login = () => signInWithPopup(auth, provider);
-        // 登出
-        window.logout = () => signOut(auth);
-        
-        // 監控登入狀態
-        onAuthStateChanged(auth, (user) => {
-            const loginBtn = document.getElementById('loginBtn');
-            const userInfo = document.getElementById('userInfo');
-            const msgInput = document.getElementById('msgInput');
-            
-            if (user) {
-                // 登入成功
-                loginBtn.style.display = "none";
-                userInfo.style.display = "flex";
-                document.getElementById('userName').innerText = user.displayName;
-                document.getElementById('userPic').src = user.photoURL;
-                msgInput.disabled = false; // 允許輸入
-            } else {
-                // 未登入
-                loginBtn.style.display = "block";
-                userInfo.style.display = "none";
-                msgInput.disabled = true; // 禁止輸入
-                msgInput.placeholder = "請先登入後再留言...";
-            }
-        });
-        
-        
-        // 發送
-        window.sendData = async function() {
-            const input = document.getElementById('msgInput');
-            if (!input.value) return;
+
+        // 3. 登入與登出函數
+        window.login = async () => {
             try {
-                await addDoc(collection(db, "messages"), { content: input.value, time: new Date() });
-                input.value = "";
-            } catch (e) { alert("發送失敗"); }
+                await signInWithPopup(auth, provider);
+            } catch (err) {
+                console.error("登入錯誤:", err);
+                alert("登入失敗，請確認 Firebase 已開啟 Google 登入功能。");
+            }
         };
-        // 把這段貼在原本的 window.sendData 附近
-        window.login = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth);
-        
+
+        // 4. 監控登入狀態
         onAuthStateChanged(auth, (user) => {
             const loginBtn = document.getElementById('loginBtn');
             const userInfo = document.getElementById('userInfo');
             const msgInput = document.getElementById('msgInput');
+            const sendBtn = document.getElementById('sendBtn');
+
             if (user) {
                 loginBtn.style.display = "none";
                 userInfo.style.display = "flex";
                 document.getElementById('userName').innerText = user.displayName;
                 document.getElementById('userPic').src = user.photoURL;
                 msgInput.disabled = false;
+                msgInput.placeholder = "輸入想說的話...";
+                sendBtn.disabled = false;
             } else {
                 loginBtn.style.display = "block";
                 userInfo.style.display = "none";
                 msgInput.disabled = true;
-                msgInput.placeholder = "請先登入後再留言...";
+                msgInput.placeholder = "請先登入以留言...";
+                sendBtn.disabled = true;
             }
         });
-        // 刪除
-        window.deleteData = async function(id) {
-            if (confirm("確定要刪除嗎？")) {
+
+        // 5. 發送資料 (包含發言者 UID)
+        window.sendData = async () => {
+            const input = document.getElementById('msgInput');
+            if (!input.value || !auth.currentUser) return;
+            try {
+                await addDoc(collection(db, "messages"), {
+                    content: input.value,
+                    time: new Date(),
+                    uid: auth.currentUser.uid,
+                    author: auth.currentUser.displayName
+                });
+                input.value = "";
+            } catch (e) { alert("發送失敗"); }
+        };
+
+        // 6. 刪除資料
+        window.deleteData = async (msgId) => {
+            if (confirm("確定要刪除這則訊息嗎？")) {
                 try {
-                    await deleteDoc(doc(db, "messages", id));
+                    await deleteDoc(doc(db, "messages", msgId));
                 } catch (e) { alert("刪除失敗"); }
             }
         };
 
-        // 讀取
+        // 7. 即時讀取資料
         const q = query(collection(db, "messages"), orderBy("time", "desc"));
         onSnapshot(q, (snapshot) => {
             const list = document.getElementById('msgList');
@@ -150,36 +156,25 @@
                 const item = document.createElement('div');
                 item.className = "msg-item";
                 item.innerHTML = `
-                    <span>${data.content}</span>
+                    <div class="msg-content">
+                        <div style="font-size: 11px; color: #00d4ff;">${data.author || '匿名'}</div>
+                        <div>${data.content}</div>
+                    </div>
                     <button class="del-btn" onclick="deleteData('${snap.id}')">刪除</button>
                 `;
                 list.appendChild(item);
             });
         });
 
-        // 動畫啟動
-        // 啟動背景粒子動畫 (精細科技版)
+        // 8. 啟動背景動畫
         particlesJS("particles-js", {
             "particles": {
-                "number": { "value": 100 }, // 增加粒子數量，讓畫面更豐富
+                "number": { "value": 100 },
                 "color": { "value": "#ffffff" },
-                "shape": { "type": "circle" },
-                "opacity": { 
-                    "value": 0.4, // 降低透明度，讓它隱約閃爍，不刺眼
-                    "random": true 
-                },
-                "size": { 
-                    "value": 1.5, // 縮小圓圈直徑，從 3 改成 1.5，變得很精緻
-                    "random": true 
-                },
-                "line_linked": { 
-                    "enable": true, 
-                    "distance": 130, 
-                    "color": "#ffffff", 
-                    "opacity": 0.3, // 連線變淡一點，看起來更像高級的神經網路
-                    "width": 1 
-                },
-                "move": { "enable": true, "speed": 1.5 } // 減慢速度，讓它像緩緩流動的星空
+                "opacity": { "value": 0.3, "random": true },
+                "size": { "value": 1.5, "random": true },
+                "line_linked": { "enable": true, "distance": 130, "color": "#ffffff", "opacity": 0.2, "width": 1 },
+                "move": { "enable": true, "speed": 1.5 }
             },
             "interactivity": {
                 "events": {
