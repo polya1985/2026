@@ -1,2 +1,61 @@
-<h1>這是我的 2026 測試網頁</h1>
-<h2>這是第二次更新，沒用到資料夾！</h2>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>我的 Firebase 留言板</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
+        input { width: 80%; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>留言板</h2>
+        <input type="text" id="msgInput" placeholder="想說什麼？">
+        <button onclick="sendData()">傳送到雲端</button>
+        <p id="status"></p>
+    </div>
+
+    <script type="module">
+        // 1. 引入 Firebase 必要的工具
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 2. 這邊填入你剛剛拿到的 firebaseConfig
+        const firebaseConfig = {
+            // *** 把你剛剛複製的那一串內容，完整貼到這裡來 ***
+            apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
+            authDomain: "my-2026-db.firebaseapp.com",
+            projectId: "my-2026-db",
+            storageBucket: "my-2026-db.firebasestorage.app",
+            messagingSenderId: "309383212061",
+            appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
+        };
+
+        // 3. 初始化 Firebase 與資料庫
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 4. 定義傳送資料的動作
+        window.sendData = async function() {
+            const text = document.getElementById('msgInput').value;
+            if (!text) return alert("請輸入文字");
+
+            try {
+                const docRef = await addDoc(collection(db, "messages"), {
+                    content: text,
+                    time: new Date()
+                });
+                document.getElementById('status').innerText = "發送成功！ID: " + docRef.id;
+                document.getElementById('msgInput').value = "";
+            } catch (e) {
+                console.error("錯誤: ", e);
+                document.getElementById('status').innerText = "失敗了，請檢查資料庫規則。";
+            }
+        }
+    </script>
+</body>
+</html>
