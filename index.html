@@ -28,19 +28,22 @@
             box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
         }
     </style>
-    
     <div class="box">
         <h2>🚀 2026 雲端留言板</h2>
         <input type="text" id="msgInput" placeholder="輸入想保存的訊息...">
         <button onclick="sendData()">點我傳送</button>
         <p id="status" style="color: #666; font-size: 14px;"></p>
+        
+        <hr> <h3>最近留言：</h3>
+        <div id="msgList" style="text-align: left; max-height: 300px; overflow-y: auto;">
+            </div>
     </div>
 
     <script type="module">
         // 1. 引入 Firebase 必要的工具
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
         // 2. 這邊填入你剛剛拿到的 firebaseConfig
         const firebaseConfig = {
             // *** 把你剛剛複製的那一串內容，完整貼到這裡來 ***
@@ -73,6 +76,29 @@
                 document.getElementById('status').innerText = "失敗了，請檢查資料庫規則。";
             }
         }
+        // 5. 自動讀取資料庫內容
+        const q = query(collection(db, "messages"), orderBy("time", "desc")); // 按時間排序
+        
+        onSnapshot(q, (snapshot) => {
+            const msgList = document.getElementById('msgList');
+            msgList.innerHTML = ""; // 先清空舊的
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const time = data.time ? data.time.toDate().toLocaleString() : ""; // 轉換時間格式
+                
+                // 製作每一條留言的樣子
+                const item = document.createElement('div');
+                item.style.borderBottom = "1px dashed #ccc";
+                item.style.padding = "10px 0";
+                item.innerHTML = `
+                    <div style="font-size: 16px;">${data.content}</div>
+                    <div style="font-size: 12px; color: #999;">${time}</div>
+                `;
+                msgList.appendChild(item);
+            });
+        });
+       
     </script>
 </body>
 </html>
