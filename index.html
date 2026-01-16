@@ -1,104 +1,98 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>我的 Firebase 留言板</title>
+    <title>2026 粒子留言板</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
-        input { width: 80%; padding: 10px; margin-bottom: 10px; }
-        button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        /* 1. 背景動畫的容器設定 */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-color: #0d1117; /* 深色背景 */
+            top: 0; left: 0; z-index: -1; /* 確保在最底層 */
+        }
+
+        /* 2. 你的留言板樣式 (延續之前的玻璃擬態) */
+        body { margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 350px;
+            color: white;
+            text-align: center;
+        }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; background: rgba(255,255,255,0.2); color: white; }
+        button { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #00d4ff; color: white; font-weight: bold; cursor: pointer; }
+        #msgList { text-align: left; margin-top: 20px; max-height: 200px; overflow-y: auto; }
     </style>
 </head>
 <body>
-    <style>
-        /* 這裡稍微美化一下按鈕 */
-        button {
-            background: linear-gradient(45deg, #007bff, #00d4ff);
-            border: none;
-            padding: 12px 24px;
-            color: white;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-            transition: 0.3s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
-        }
-    </style>
+
+    <div id="particles-js"></div>
+
     <div class="box">
-        <h2>🚀 2026 雲端留言板</h2>
-        <input type="text" id="msgInput" placeholder="輸入想保存的訊息...">
-        <button onclick="sendData()">點我傳送</button>
-        <p id="status" style="color: #666; font-size: 14px;"></p>
-        
-        <hr> <h3>最近留言：</h3>
-        <div id="msgList" style="text-align: left; max-height: 300px; overflow-y: auto;">
-            </div>
+        <h2>✨ 粒子流光留言板</h2>
+        <input type="text" id="msgInput" placeholder="輸入訊息...">
+        <button onclick="sendData()">發送到雲端</button>
+        <p id="status"></p>
+        <div id="msgList"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
     <script type="module">
-        // 1. 引入 Firebase 必要的工具
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        // 2. 這邊填入你剛剛拿到的 firebaseConfig
+
+        // *** 這裡請填入你昨天的 firebaseConfig ***
         const firebaseConfig = {
-            // *** 把你剛剛複製的那一串內容，完整貼到這裡來 ***
-            apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
-            authDomain: "my-2026-db.firebaseapp.com",
-            projectId: "my-2026-db",
-            storageBucket: "my-2026-db.firebasestorage.app",
-            messagingSenderId: "309383212061",
-            appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
+            apiKey: "你的內容...",
+            authDomain: "你的內容...",
+            projectId: "你的內容...",
+            storageBucket: "你的內容...",
+            messagingSenderId: "你的內容...",
+            appId: "你的內容..."
         };
 
-        // 3. 初始化 Firebase 與資料庫
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 4. 定義傳送資料的動作
+        // 發送資料
         window.sendData = async function() {
             const text = document.getElementById('msgInput').value;
-            if (!text) return alert("請輸入文字");
+            if (!text) return;
+            await addDoc(collection(db, "messages"), { content: text, time: new Date() });
+            document.getElementById('msgInput').value = "";
+        };
 
-            try {
-                const docRef = await addDoc(collection(db, "messages"), {
-                    content: text,
-                    time: new Date()
-                });
-                document.getElementById('status').innerText = "發送成功！ID: " + docRef.id;
-                document.getElementById('msgInput').value = "";
-            } catch (e) {
-                console.error("錯誤: ", e);
-                document.getElementById('status').innerText = "失敗了，請檢查資料庫規則。";
-            }
-        }
-        // 5. 自動讀取資料庫內容
-        const q = query(collection(db, "messages"), orderBy("time", "desc")); // 按時間排序
-        
+        // 讀取資料
+        const q = query(collection(db, "messages"), orderBy("time", "desc"));
         onSnapshot(q, (snapshot) => {
-            const msgList = document.getElementById('msgList');
-            msgList.innerHTML = ""; // 先清空舊的
-            
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const time = data.time ? data.time.toDate().toLocaleString() : ""; // 轉換時間格式
-                
-                // 製作每一條留言的樣子
+            const list = document.getElementById('msgList');
+            list.innerHTML = "";
+            snapshot.forEach(doc => {
                 const item = document.createElement('div');
-                item.style.borderBottom = "1px dashed #ccc";
-                item.style.padding = "10px 0";
-                item.innerHTML = `
-                    <div style="font-size: 16px;">${data.content}</div>
-                    <div style="font-size: 12px; color: #999;">${time}</div>
-                `;
-                msgList.appendChild(item);
+                item.innerHTML = `<p style="border-bottom: 1px solid rgba(255,255,255,0.2); padding: 5px;">${doc.data().content}</p>`;
+                list.appendChild(item);
             });
         });
-       
+
+        // 啟動背景粒子動畫 (這段通常是從 CodePen 的 JS 區塊搬過來的)
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80 },
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5 },
+                "size": { "value": 3 },
+                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+                "move": { "enable": true, "speed": 6 }
+            }
+        });
     </script>
 </body>
 </html>
