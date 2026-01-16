@@ -50,12 +50,12 @@
 
         // *** 這裡請填入你昨天的 firebaseConfig ***
         const firebaseConfig = {
-            apiKey: "你的內容...",
-            authDomain: "你的內容...",
-            projectId: "你的內容...",
-            storageBucket: "你的內容...",
-            messagingSenderId: "你的內容...",
-            appId: "你的內容..."
+            apiKey: "AIzaSyD2UIeEEz1sObdXPGi209b9pzeK4JT7ku0",
+            authDomain: "my-2026-db.firebaseapp.com",
+            projectId: "my-2026-db",
+            storageBucket: "my-2026-db.firebasestorage.app",
+            messagingSenderId: "309383212061",
+            appId: "1:309383212061:web:aa494b62a6517b8c99eaf4"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -82,6 +82,7 @@
         });
 
         // 啟動背景粒子動畫 (這段通常是從 CodePen 的 JS 區塊搬過來的)
+        // 啟動背景粒子動畫 (開啟滑鼠互動功能)
         particlesJS("particles-js", {
             "particles": {
                 "number": { "value": 80 },
@@ -90,9 +91,24 @@
                 "opacity": { "value": 0.5 },
                 "size": { "value": 3 },
                 "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
-                "move": { "enable": true, "speed": 6 }
-            }
+                "move": { "enable": true, "speed": 4 }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": { "enable": true, "mode": "grab" }, // 滑鼠靠近時會「抓取」連線
+                    "onclick": { "enable": true, "mode": "push" }, // 點擊時會「噴出」更多粒子
+                    "resize": true
+                },
+                "modes": {
+                    "grab": { "distance": 200, "line_linked": { "opacity": 1 } },
+                    "push": { "particles_nb": 4 }
+                }
+            },
+            "retina_detect": true
         });
+
+        
     </script>
 </body>
 </html>
